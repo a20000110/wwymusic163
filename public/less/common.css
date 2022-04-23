@@ -1,0 +1,102 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+html {
+  overflow-y: scroll;
+}
+:root {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+:root body {
+  position: absolute;
+}
+body {
+  background-color: #f5f5f5;
+  width: 100vw;
+  overflow: hidden;
+}
+a {
+  text-decoration: dashed;
+  color: #666;
+  cursor: pointer;
+  font-size: 12px;
+}
+.text-align {
+  text-align: center;
+}
+li {
+  list-style: none;
+}
+img {
+  vertical-align: bottom;
+  width: 100%;
+  height: 100%;
+}
+em {
+  font-style: normal;
+}
+.w {
+  width: 980px;
+  margin: auto;
+  background-color: #fff;
+  border-left: 1px solid #d3d3d3;
+  border-right: 1px solid #d3d3d3;
+  overflow: hidden;
+}
+.common-left {
+  width: 730px;
+  overflow: hidden;
+  padding: 20px 20px 40px;
+}
+.common-right {
+  width: 250px;
+}
+.common-12font {
+  font-size: 12px;
+  color: #ccc;
+}
+.hotmenu {
+  display: flex;
+  align-items: center;
+  height: 33px;
+  width: 100%;
+  padding: 0 10px 0 14px;
+  border-bottom: 2px solid #c10d0c;
+}
+.hotmenu .hot-title {
+  font-weight: 400;
+}
+.hotmenu .hot-more {
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: end;
+}
+.hotmenu .hot-more .el-icon-right {
+  color: #c10d0c;
+}
+.red-round {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #c10d0c;
+  margin-right: 10px;
+}
+.red-round .white-round {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+}
+.line {
+  margin: 0 10px;
+  color: #ccc;
+}
