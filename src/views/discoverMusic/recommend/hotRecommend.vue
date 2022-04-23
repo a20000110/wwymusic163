@@ -50,7 +50,7 @@
               href="JavaScript:;"
               class="icon-play"
               title="播放"
-              @click="playSongs(item)"
+              @click="playSongs(item,'play')"
             ></a>
           </span>
         </div>
@@ -107,6 +107,14 @@ export default {
           }
         });
         this.personaLized = this.personaLized.concat(program);
+       let per3 =  this.personaLized[3]
+       let per4 =  this.personaLized[4]
+       let per5 =  this.personaLized[5]
+       let per6 =  this.personaLized[6]
+       this.personaLized[3] = per5 
+       this.personaLized[4] = per3
+       this.personaLized[5] = per6
+       this.personaLized[6] = per4
       }
     },
     // 热门菜单路由跳转
@@ -114,8 +122,8 @@ export default {
       console.log(item);
     },
     // 播放
-    playSongs(item) {
-      this.$bus.$emit("playList", item);
+    playSongs(item,play) {
+      this.$bus.$emit("playList", {item,play});
     },
   },
   mounted() {

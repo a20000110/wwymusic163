@@ -29,4 +29,8 @@ bottomBar.vue 的底部音乐播放器未完成 ---ok
 播放列表 歌曲id不匹配和URL不匹配(可能出现再bottomPlayer 147行) ---ok
 优化播放，按需请求歌词，bottomPlayer 104行 
 
-"# wwymusic163" 
+4-24
+页面菜单点击播放能够实现播放功能，歌单排序
+歌词未完成（190行）
+
+

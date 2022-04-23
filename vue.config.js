@@ -10,7 +10,7 @@ module.exports = {
     proxy: {
       '/': {
         // target: 'http://120.77.62.88:3000',
-        target: 'http://localhost:4000',
+        target: 'http://localhost:3000',
       },
     }
   },
@@ -21,6 +21,7 @@ module.exports = {
       alias: {
         '@': resolve('src')
       }
-    }
+    },
+    externals: 'hls.js'
   }
 }

@@ -20,32 +20,41 @@
       ></span>
     </span>
     <a-player
+      :lrc-type="1"
       :audio="audio"
       theme="#fff7d0"
       :lrc="audio.lrc"
-       :lrc-type="1"
       ref="aplayer"
+      :listFolded="true"
+      @playing="onPlaying"
+      @pause="onPause"
+      @listShow="onListShow"
+      @listSwitch="onListSwitch"
     ></a-player>
   </div>
 </template>
 
 <script>
+import debounce from "lodash/debounce.js";
 export default {
   name: "BottomPlayer",
   data() {
     return {
-      // 保存歌单信息
-      playListData: [],
       // 播放列表
       trackList: [],
       // 播放列表单曲ID
       songsList: "",
       // 歌词
-      lyricList: [],
+      lyricList: "",
       audio: [],
       isPlay: false,
+      // 保存电台节目的封面
+      djInfo: {},
+      // 页面切换歌曲的定时器
+      switchTimer: null,
     };
   },
+  computed: {},
   methods: {
     // 快捷键
     songkeyUp(e) {
@@ -59,43 +68,6 @@ export default {
         this.playMusic();
       }
     },
-    // 播放列表
-    async playList(item) {
-      const result = await this.$API.singer.reqPlayList({ id: item.id });
-      if (result.code == 200) {
-        this.playListData = result.playlist.tracks.map((item) => {
-          return {
-            album: item.al,
-            alias: item.alia,
-            artists: item.ar,
-            cd: item.cd,
-            mvid: item.mv,
-            name: item.name,
-            version: item.v,
-            rtUrls: item.rtUrls,
-            rtUrl: item.rtUrl,
-            copyrightId: item.cp,
-            duration: item.dt,
-            fee: item.fee,
-            ftype: item.ftype,
-            id: item.id,
-            mst: item.mst,
-            position: item.no,
-            pstatus: item.pst,
-            // privilege:result.privilege,
-            // commentThreadId:result.playlist.commentThreadId,
-            ringtone: item.rt,
-            score: item.pop,
-            songtype: item.st,
-          };
-        });
-        this.playListData.forEach((item, index) => {
-          item.commentThreadId = result.playlist.commentThreadId;
-          item.privilege = result.privileges[index];
-        });
-        localStorage.setItem("track-queue", JSON.stringify(this.playListData));
-      }
-    },
     // 上一曲
     lastSong() {
       this.$refs.aplayer.skipBack();
@@ -104,51 +76,173 @@ export default {
     playMusic() {
       this.$refs.aplayer.toggle();
       this.isPlay = !this.isPlay;
-      let palyMusicId = this.$refs.aplayer.currentMusic
-      console.log(palyMusicId);
     },
     // 下一曲
     nextSong() {
       this.$refs.aplayer.skipForward();
     },
+    // 当播放器暂停时触发
+    onPause() {
+      this.isPlay = false;
+      document.title = "music163wyy";
+    },
+    // 当播放器播放时触发
+    onPlaying(e) {
+      this.isPlay = true;
+      document.title = "▶  " + this.$refs.aplayer.currentMusic.name;
+    },
+    // 播放列表显示时触发获取歌词
+    onListShow() {
+      console.log(this.$refs.aplayer.currentMusic.id);
+    },
+    // 切换播放音频时触发
+    onListSwitch(e) {
+      this.switchPlay(e.id);
+    },
+    // 初始化播放器
+    initPlay() {
+      this.audio = [];
+      this.trackList = [];
+      this.songsList = "";
+      this.lyricList = "";
+    },
+    // 播放列表
+    playList: debounce(async function ({ item, play }) {
+      let playId = "";
+      let flag = "";
+      // 判断类型 歌单（0） 电台节目(1)
+      if (item.type == 0) {
+        // play代表用户主动点击页面上的一些播放按钮
+        // 每次获取新的歌单时都需要清空这些播放列表
+        this.initPlay();
+        const result = await this.$API.singer.reqPlayList({ id: item.id });
+        if (result.code == 200) {
+          this.trackList = result.playlist.tracks.map((item) => {
+            return {
+              album: item.al,
+              alias: item.alia,
+              artists: item.ar,
+              cd: item.cd,
+              mvid: item.mv,
+              name: item.name,
+              version: item.v,
+              rtUrls: item.rtUrls,
+              rtUrl: item.rtUrl,
+              copyrightId: item.cp,
+              duration: item.dt,
+              fee: item.fee,
+              ftype: item.ftype,
+              id: item.id,
+              mst: item.mst,
+              position: item.no,
+              pstatus: item.pst,
+              // privilege:result.privilege,
+              // commentThreadId:result.playlist.commentThreadId,
+              ringtone: item.rt,
+              score: item.pop,
+              songtype: item.st,
+            };
+          });
+          this.trackList.forEach((item, index) => {
+            item.commentThreadId = result.playlist.commentThreadId;
+            item.privilege = result.privileges[index];
+          });
+          playId = this.trackList[0].id;
+        }
+      } else if (item.type == 1) {
+        this.djInfo = {
+          picUrl: item.picUrl,
+          name: item.name,
+        };
+        const result = await this.$API.singer.reqDjDetail({ id: item.id });
+        // 因为电台只有一首所以直接Push 要先判断是否存在
+        // flag判断当前是否已经存在该歌曲
+        playId = result.program.mainSong.id;
+        if (result.code == 200) {
+          flag = this.trackList.some(
+            (item) => item.id == result.program.mainSong.id
+          );
+          if (!flag) {
+            Object.assign(result.program.mainSong.album, this.djInfo);
+            this.trackList.push(result.program.mainSong);
+          }
+        }
+      }
+      localStorage.setItem("track-queue", JSON.stringify(this.trackList));
+      this.getTrackList();
+      this.getMusicUrl(this.songsList, playId);
+      playId = "";
+      flag = "";
+    }, 300),
+    // 切换播放以及获取歌词
+    async switchPlay(id, from) {
+      // from表示来自哪个函数调用
+      // 获取歌词
+
+      const result = await this.$API.singer.reqLyric(id);
+
+      this.audio.some((item, index) => {
+        if (item.id == id) {
+          item.lrc = result.lrc.lyric;
+          console.log(item.lrc);
+          // 切换播放根据ID获取传递下标
+          //在页面上切换歌曲无法播放 播放器组件的原因，没有找到解决办法，最后只能设定一个定时器来解决，
+
+          if (from) {
+            this.$nextTick(() => {
+              this.switchTimer = setTimeout(() => {
+                this.$refs.aplayer.switch(index);
+                this.$refs.aplayer.play();
+                clearTimeout(this.switchTimer);
+                this.switchTimer = null;
+              }, 100);
+            });
+          } else {
+            return;
+          }
+        }
+      });
+    },
     // 获取播放列表
     getTrackList() {
-      this.trackList = JSON.parse(localStorage.getItem("track-queue"));
+      this.songsList = "";
+      let list = JSON.parse(localStorage.getItem("track-queue"));
+      this.trackList = list || [];
       if (this.trackList) {
         this.trackList.forEach((item) => {
           this.songsList += item.id + ",";
         });
         let strIndex = this.songsList.indexOf(",", this.songsList.length - 1);
         this.songsList = this.songsList.slice(0, strIndex);
-        this.getMusicUrl(this.songsList);
-      } else {
-        return false;
       }
     },
     // 获取音乐URL
-    async getMusicUrl(id) {
+    async getMusicUrl(id, playId) {
       const result = await this.$API.singer.reqMusicUrl(id);
       if (result.code == 200) {
-        this.audio = result.data.map((item) => {
-          return {
-            id: item.id,
-            url: item.url,
-            lrc: "",
-            type: item.type,
-          };
-        });
+        // 这里需要清空播放列表重新赋值，才能更新播放器的数据
+        this.audio = [];
         // 获取歌手，歌名，海报等信息
         this.trackList.forEach((item, index) => {
+          this.audio.push({
+            name: item.name,
+            artist: item.artists[0].name,
+            cover: item.album.picUrl + "?param=34y34",
+            id: item.id,
+            // lrc: "",
+          });
+        });
+        result.data.forEach((item) => {
           this.audio.forEach((lis) => {
             if (item.id == lis.id) {
-              lis.name = item.name;
-              lis.artist = item.artists[0].name;
-              lis.cover = item.album.picUrl + "?param=34y34";
-            } else {
-              return false;
+              lis.url = item.url;
             }
           });
         });
+
+        playId
+          ? this.switchPlay(playId, "getMusicUrl")
+          : this.switchPlay(this.$refs.aplayer.currentMusic.id); //初始化当前播放的歌曲获取歌词
       }
     },
   },
@@ -157,6 +251,7 @@ export default {
     window.addEventListener("keyup", this.songkeyUp);
     // 获取播放列表
     this.getTrackList();
+    this.getMusicUrl(this.songsList);
     // 全局事件播放事件
     this.$bus.$on("playList", (item) => {
       this.playList(item);
@@ -164,7 +259,6 @@ export default {
   },
   destroyed() {
     window.removeEventListener("keyup", this.songkeyUp);
-    this.$bus.$off("playList");
   },
 };
 </script>
@@ -227,14 +321,14 @@ export default {
     }
     // 歌词
     .aplayer-lrc {
-    position: absolute!important;
-    top: -250px!important;
-    background: #fff!important;
-    width: 100%!important;
-    height: 250px!important;
-    text-align: center!important;
-    overflow: hidden;
-}
+      position: absolute !important;
+      top: -250px !important;
+      background: #fff !important;
+      width: 100% !important;
+      height: 250px !important;
+      text-align: center !important;
+      overflow: hidden;
+    }
   }
   .aplayer-title {
     color: #fff !important;
@@ -313,5 +407,12 @@ ol.aplayer-list {
   background: #000 !important;
   color: #fff;
 }
-
+// 隐藏播放器通知
+.aplayer-notice {
+  display: none !important;
+}
+// 歌词
+.aplayer-lrc-contents {
+  padding-top: 20px;
+}
 </style>

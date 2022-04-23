@@ -11,7 +11,6 @@ export const reqIsPhone = (phone) => request({ url: `/cellphone/existence/check?
 
 // 二维码key生成
 export const reqQRKey = ()=>request({url:`/login/qr/key`,method:'get'})
-
 // 二维码生成接口
 export const reqQRUrl=(key)=>request({url:`/login/qr/create?key=${key}&timerstamp=${Date.now()}`})
 // 二维码轮询是否失效||是否已扫码

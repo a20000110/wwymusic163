@@ -11,6 +11,8 @@ export const reqPlayList = (params)=>request({url:'/playlist/detail',params})
 // 获取音乐url
 export const reqMusicUrl = (musicId)=>request({url:`/song/url?id=${musicId}`})
 // 获取歌词
-export const reqLyric = (id)=>request({url:'/lyric',params:id})
-// 获取歌曲详情
+export const reqLyric = (id)=>request({url:'/lyric',params:{id}})
+// 获取歌曲详情(判断是否为电台节目)
 export const reqSongDetail = (id)=>request({url:'/song/detail',params:{ids:id}})
+// 获取电台节目信息
+export const reqDjDetail =(id)=>request({url:'/dj/program/detail',params:id})

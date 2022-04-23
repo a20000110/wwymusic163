@@ -12,7 +12,7 @@ import API from '@/api'
 // 任意组件可以使用api接口
 Vue.prototype.$API = API
 // 引入懒加载
-import loading from "@/assets/image/loading.png"
+import loading from "@/assets/image/3132508627578625.jpg"
 import VueLazyload from 'vue-lazyload'
 Vue.use(VueLazyload, {loading})
 // 引入vuex
@@ -21,10 +21,10 @@ import store from "@/store";
 import Cookie from 'js-cookie'
 Vue.config.productionTip = false
 // 引入vue-aplayer
-import APlayer from '@moefe/vue-aplayer';
-Vue.use(APlayer, {
-  defaultCover: 'https://github.com/u3u.png', // 设置播放器默认封面图片
-  productionTip: false, // 是否在控制台输出版本信息
+import aplayer from '@moefe/vue-aplayer';
+Vue.use(aplayer, {
+  defaultCover: 'https://s4.music.126.net/style/web2/img/default/default_album.jpg', // 设置播放器默认封面图片
+  productionTip: true, // 是否在控制台输出版本信息
 });
 // 阿里图标库
 Vue.use('//at.alicdn.com/t/font_3346479_fnm0s1lnkw.css')
